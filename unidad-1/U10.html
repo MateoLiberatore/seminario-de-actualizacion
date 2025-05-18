@@ -698,8 +698,9 @@ function viewUsers()
     let message = "Usuarios registrados:\n";
 
     for (let [username, data] of authData.entries()) 
-    {
-        message += `Nombre: ${data.name}, Categoría: ${data.category}\n`;
+    {   
+        // un poco larga quedó, no habia mas nafta acá;
+         message += `Usuario: ${username}\nID: ${data.id}\nNombre: ${data.name}\nCategoría: ${data.category}\nBloqueado: ${data.isLocked}\nIntentos fallidos: ${data.failedLoginCounter}\n\n`;
     }
     alert(message);
 }
@@ -808,7 +809,7 @@ function adminAddUser()
         `- Usuario: ${user_name}\n` +
         `- ID: ${newId}\n` +
         `- Nombre: ${name}\n` +
-        `- Contraseña: ${password}`+
+        `- Contraseña: ${password}\n`+
         `- Categoria: ${category}`
     )) 
     {
@@ -1003,15 +1004,15 @@ function menuSelector(user,category)
     {
         adminMenu(user);
     }
-    if(category === 'seller')
+    else if(category === 'seller')
     {
         sellerMenu(user);
     }
-    if(category === 'worker')
+    else if(category === 'worker')
     {
         workerMenu(user);
     }
-    if(category === 'client')
+    else if(category === 'client')
     {
         clientMenu(user);
     }
