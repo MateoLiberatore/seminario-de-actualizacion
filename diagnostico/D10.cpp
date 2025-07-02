@@ -54,7 +54,7 @@ void user_crud(){
         std::cout << "x. Salir" << std::endl;
         std::cin >> option;
         
-        if (option == "1")                       {add_user_by_admin(); continue;}
+        if      (option == "1")                  {add_user_by_admin(); continue;}
         else if (option == "2")                  {print_users(); continue;}
         else if (option == "3")                  {delete_user(); continue;}
         else if (option == "4")                  {update_user(); continue;}
@@ -532,10 +532,10 @@ void update_product() {
         while (true) {
 
             system("cls");
-            std::cout << "ID: " << products[found_index].id
-                      << " Nombre: " << products[found_index].name
-                      << " Precio: " << products[found_index].price
-                      << " Stock: " << products[found_index].stock << std::endl;
+            std::cout << "ID: "         << products[found_index].id
+                      << " Nombre: "    << products[found_index].name
+                      << " Precio: "    << products[found_index].price
+                      << " Stock: "     << products[found_index].stock << std::endl;
 
             std::string field;
             std::cout << "Elija campo a modificar:" << std::endl;

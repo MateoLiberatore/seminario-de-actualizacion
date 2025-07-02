@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8" />
+<title>Unidad 1</title>
+</head>
+
+<body>
+
+</body>
+
+<script type="text/javascript">
+	
+/*Construya el CRUD que permita gestionar los artículos de limpieza incorporados en el punto anterior.
+Considere la numeración de acciones para seguir extendiendo la funcionalidad del programa. ( 1 = Listar
+artículos, 2 = Nuevo artículo, 3 = Editar artículo, 4 = Eliminar artículo ). Cada operación del CRUD deberá
+estar implementada correctamente y aparecer en el menú principal de acciones.*/
+
+//k-v (key: username, value: password)
+let authData = new Map();
+let products = new Map();
+
+const maxLoginFailedAttempts = 3;
+let productData = {
+    1: {
+        id: 1,
+        name: "Lavandina x 1L",
+        price: 875.25,
+        stock: 3000
+    },
+    4: {
+        id: 4,
+        name: "Detergente x 500mL",
+        price: 1102.45,
+        stock: 2010
+    },
+    22: {
+        id: 22,
+        name: "Jabón en polvo x 250g",
+        price: 650.22,
+        stock: 407
+    }
+};
+
+function crud()
+{
+    while(true)
+    {
+        let option = window.prompt(
+            `Menú de productos:\n` +
+            `1. Crear Producto\n` +
+            `2. Buscar Producto\n` +
+            `3. Eliminar Producto\n` +
+            `4. Modificar Producto\n` +
+            `x. Salir`
+        );
+
+        switch (option)
+        {
+            case "1":
+                addProduct();      
+                break;
+            case "2":
+                readProduct();
+                break;
+            case "3":
+                deleteProduct();
+                break;
+            case "4": 
+                updateProduct();
+                break;
+            case "x":
+                return; 
+            default:
+                alert("Opción inválida");
+        }
+    }
+}
+
+function addProduct()
+{
+    let product = 
+    {
+        id: null,
+        name: null,
+        price: null,
+        stock: null
+    };
+
+    let usedIds = Object.keys(productData).map(id => parseInt(id)).sort((a,b) => a-b);
+    let nextId = 1;
+
+    for (let id of usedIds) {
+        if (id === nextId) {
+            nextId++;
+        } else if (id > nextId) {
+            break;
+        }
+    }
+
+    let new_name = window.prompt('Ingrese nombre del nuevo producto:');
+    let new_price = parseFloat(window.prompt('Ingrese el precio del nuevo producto:'));
+    let new_stock = parseInt(window.prompt('Ingrese el stock del nuevo producto:'));
+
+    product.id = nextId;
+    product.name = new_name;
+    product.price = new_price;
+    product.stock = new_stock;
+
+    if (confirm(
+        `Confirmar la creación del siguiente producto:\n\n` +
+        `Nombre: ${product.name}\n` +
+        `ID:     ${product.id}\n` +
+        `Precio: ${product.price}\n` +
+        `Stock:  ${product.stock}`
+    )) {
+        productData[product.id] = product;
+        alert('Producto creado');
+    } else {
+        alert('Acción cancelada');
+    }
+}
+
+function readProduct()
+{
+    let search = window.prompt('Ingrese nombre del producto:').toLowerCase();
+    let found = false;
+
+    for (let id in productData)
+    {
+        let product = productData[id];
+        if (product.name.toLowerCase().includes(search))
+        {
+            alert(
+                `Nombre: ${product.name}\n` +
+                `ID:     ${product.id}\n` +
+                `Precio: ${product.price}\n` + 
+                `Stock:  ${product.stock}`
+            );
+            found = true;
+        }
+    }
+
+    if (!found) {
+        alert('Producto no encontrado.');
+    }
+}
+
+function deleteProduct()
+{
+    let id = parseInt(window.prompt("Ingrese ID del producto a eliminar:"));
+
+    if (productData.hasOwnProperty(id))
+    {
+        let product = productData[id];
+
+        if (confirm(
+            `¿Borrar el siguiente producto?\n\n` +
+            `Nombre: ${product.name}\n` +
+            `ID:     ${product.id}\n` +
+            `Precio: ${product.price}\n` + 
+            `Stock:  ${product.stock}`
+        )) {
+            delete productData[id];
+            alert('Producto eliminado');
+        } else {
+            alert('Acción cancelada');
+        }
+    } else {
+        alert('ID no encontrado');
+    }
+}
+
+function updateProduct()
+{
+    let id = parseInt(window.prompt("Ingrese ID del producto a modificar:"));
+
+    if (productData.hasOwnProperty(id))
+    {
+        let product = productData[id];
+
+        let new_name = window.prompt(`Nombre actual: ${product.name}\nNuevo nombre:`, product.name);
+        let new_price = parseFloat(window.prompt(`Precio actual: ${product.price}\nNuevo precio:`, product.price));
+        let new_stock = parseInt(window.prompt(`Stock actual: ${product.stock}\nNuevo stock:`, product.stock));
+
+        if (confirm(
+            `¿Confirmar los siguientes cambios?\n\n` +
+            `Nombre: ${new_name}\n` +
+            `Precio: ${new_price}\n` +
+            `Stock: ${new_stock}`
+        )) {
+            product.name = new_name;
+            product.price = new_price;
+            product.stock = new_stock;
+            alert("Producto actualizado");
+        } else {
+            alert("Modificación cancelada");
+        }
+    } else {
+        alert("ID no encontrado");
+    }
+}
+
+
+let userData = 
+{
+
+        user_1 : {
+            id: 1,
+            name: 'scorpion',
+		    password: '987654',
+		    failedLoginCounter: 0,
+		    isLocked: false
+        },
+        
+        user_2 : {
+            id : 2,
+            name: 'subZero',
+		    password: '987654',
+		    failedLoginCounter: 0,
+		    isLocked: false 
+        }
+    };    
+
+authData.set('scorpion',userData.user_1);
+authData.set('subZero',userData.user_2);
+
+function isValidUserGetData (name)
+{
+    return authData.get(name) || null;
+}
+
+function authenticateUser(username, password)
+{
+    let api_return = 
+    {
+        status : false,
+        result : null,
+		user : null
+    };
+
+    const invalid_values = [undefined, null, ''];
+
+    if (invalid_values.includes(username) || invalid_values.includes(password))
+    {
+		api_return.result = 'INVALID_INPUT';
+		return api_return;
+	}
+
+    let user_data = isValidUserGetData(username);
+
+	if (!user_data)
+	{
+		api_return.result = 'USER_NOT_FOUND';	
+		return api_return;
+	}
+
+	if (user_data.isLocked == false)
+	{
+		if (user_data.password === password)
+		{
+			api_return.status = true;
+			api_return.result = 'AUTH_SUCCESS';
+			api_return.user = loggedUser(username);
+
+			user_data.failedLoginCounter = 0;
+
+			
+		}
+		else
+		{
+			api_return.status = false;
+			api_return.result = 'USER_PASSWORD_FAILED';
+
+			user_data.failedLoginCounter++;
+
+				if ( user_data.failedLoginCounter == maxLoginFailedAttempts)
+				{
+					user_data.isLocked = true;
+					api_return.status = false;
+					api_return.result  = 'BLOCKED_USER';
+
+				}
+			}
+	}
+	else
+	{
+		api_return.status = false;
+		api_return.result = 'BLOCKED_USER';
+	}
+		
+		return api_return;
+}
+
+function loggedUser(username)
+{
+	let logged_user = authData.get(username);
+	return logged_user;
+}
+
+function GUI_login() {	
+	let attempts = 0;
+	let api_return;
+
+	while (attempts < maxLoginFailedAttempts) {
+		let username = window.prompt("Ingrese su nombre de usuario:");
+		let password = window.prompt("Ingrese su contraseña:");
+
+		api_return = authenticateUser(username, password);
+
+		if (api_return.status) {
+			alert("Usuario autenticado exitosamente");
+			return api_return;
+		}
+
+		switch (api_return.result) {
+			case 'BLOCKED_USER':
+				alert('Usuario bloqueado, contacte al administrador');
+				return api_return;
+
+			case 'USER_PASSWORD_FAILED':
+				alert('Usuario y/o contraseña incorrecta');
+				attempts++;
+				break;
+
+			default:
+				alert('Error desconocido');
+				return api_return;
+		}
+	}
+
+	alert("Máximo de intentos alcanzado. Intente más tarde.");
+	return api_return;
+}
+
+function passwordMenu(user_name) {
+	while (true) {
+		let action = window.prompt("Ingrese una opción:\n1. Cambiar contraseña\nX. Volver al menú principal");
+
+		if (action === null || action.toLowerCase() === 'x') {
+			alert("Volviendo al menú principal...");
+			return;
+		}
+
+		if (action === "1") {
+			let valid_password = false;
+
+			while (!valid_password) {
+				let new_password = window.prompt(`Ingrese la nueva contraseña de: ${user_name}`);
+				
+				if (new_password === null) {
+					alert("Cambio de contraseña cancelado.");
+					break;
+				}
+
+				valid_password = passHealth(new_password);
+
+				if (valid_password) {
+					let user = loggedUser(user_name);
+					user.password = new_password;
+					alert(`Nueva contraseña de ${user.name}: ${new_password}`);
+				}
+			}
+			return; // vuelve al menú principal después de cambiar o cancelar
+		} else {
+			alert("Opción inválida, intente de nuevo.");
+		}
+	}
+}
+
+function passHealth(password) {
+
+    const pass_requirements = {
+        uppercase_minimum: 1,
+        character_min: 8,
+        character_max: 16,
+        special_needed: 2,
+        any_number : 1
+    };
+
+    if (!password) return false;
+
+    let uppercase_check = password.match(/[A-Z]/g);
+    let uppercase_amount = uppercase_check ? uppercase_check.length : 0;
+
+    let password_length = password.length;
+
+    let special_check = password.match(/[^a-zA-Z0-9]/g);
+    let special_amount = special_check ? special_check.length : 0;
+
+    let number_check = password.match(/\d/);
+    let number_amount = number_check ? number_check.length : 0;
+
+    if (
+        uppercase_amount >= pass_requirements.uppercase_minimum &&
+        password_length >= pass_requirements.character_min &&
+        password_length <= pass_requirements.character_max &&
+        special_amount >= pass_requirements.special_needed && 
+        number_amount >= pass_requirements.any_number
+    ) 
+    {
+        return true;
+    } 
+    else 
+    {
+        alert(` La contraseña debe cumplir con:
+                - Ser alfanumérica
+                - Al menos ${pass_requirements.uppercase_minimum} letra mayúscula
+                - Entre ${pass_requirements.character_min} y ${pass_requirements.character_max} caracteres
+                - Al menos ${pass_requirements.special_needed} caracteres especiales`);
+        return false;
+    }
+}
+
+function addUser() {
+    alert(`Formulario de creación de usuario.\nComplete los siguientes campos:`);
+
+    let user_name;
+    let password;
+    let name;
+
+    let unique_name = false;
+    let healthy_password = false;
+
+    while (!unique_name) {
+        user_name = window.prompt('Ingrese nombre del usuario:');
+        if (!user_name) return null;
+        if (authData.has(user_name)) {
+            alert('Nombre en uso, ingrese uno distinto');
+        } else {
+            unique_name = true;
+        }
+    }
+
+    while (!healthy_password) {
+        password = window.prompt('Ingrese nueva contraseña:');
+        if (password === null) return null;
+        if (passHealth(password)) {
+            healthy_password = true;
+        }
+    }
+
+    name = window.prompt('Ingrese su nombre completo:');
+    if (name === null) return null;
+
+    let maxId = 0;
+    for (let user of authData.values()) {
+        if (user.id > maxId) {
+            maxId = user.id;
+        }
+    }
+    let newId = maxId + 1;
+
+    let new_user_data = {
+        id: newId,
+        name: name,
+        password: password,
+        failedLoginCounter: 0,
+        isLocked: false
+    };
+
+    if (confirm (
+        `¿Desea crear el siguiente usuario?\n\n` +
+        `- Usuario: ${user_name}\n` +
+        `- ID: ${newId}\n` +
+        `- Nombre: ${name}\n` +
+        `- Contraseña: ${password}`
+    )) 
+    {
+        alert('Usuario creado');
+        authData.set(user_name, new_user_data);
+        return {
+            status: true,
+            user_data: new_user_data,
+			user : user_name 
+        };
+    }
+    else
+    {
+        alert('Acción cancelada');
+        return null;
+    }
+}
+
+function main() {
+
+    while (true) {
+        let option = window.prompt(`Menú principal:\n1. Iniciar sesión\n2. Crear usuario\nX. Salir`);
+
+        if (!option || option.toLowerCase() === 'x') {
+            alert('Saliendo...');
+            break;
+        }
+
+        let api_return = null;
+
+        switch (option.toLowerCase()) {
+            case "1":
+                api_return = GUI_login();
+                break;
+            case "2":
+                api_return = addUser();
+                break;
+			case "x":
+				alert('Saliendo...');
+				break;
+            default:
+                alert('Opción inválida');
+                continue;
+        }
+       
+        if (!api_return || !api_return.user) continue;  // no se registro el usuario
+
+        let user_name = typeof api_return.user === "string" ? api_return.user : api_return.user.name;
+
+        
+        let exitUserMenu = false;// al menu del usuario logueado;
+
+        while (!exitUserMenu) {
+            
+            let subOption = window.prompt(`Menú de usuario (${user_name}):\n 1. Cambiar contraseña\n 2. Productos\n X. Volver al menú principal`);
+            switch (subOption?.toLowerCase()) {
+                case "1":
+                    passwordMenu(user_name);
+                    break;
+                case"2":
+                    crud();
+                    break;
+                case "x":
+                    exitUserMenu = true; // rebotar al menu principal;
+                    break;
+                default:
+                    alert('Opción inválida');
+                    break;
+            }
+        }
+    }
+}
+
+
+
+
+window.onload = main;
+</script>
+
+</html>

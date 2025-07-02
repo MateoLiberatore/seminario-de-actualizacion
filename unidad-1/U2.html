@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8" />
+<title>Unidad 1</title>
+</head>
+
+<body>
+
+</body>
+
+<script type="text/javascript">
+	
+/*En el sistema del punto 1, una vez que el usuario ingresa satisfactoriamente (si sus credenciales de
+acceso son válidas) es recibido con un mensaje de bienvenida. Extienda el programa de modo tal que
+además del mensaje, pueda acceder a un menú de acciones etiquetado: ( 1. Cambiar contraseña. X. Salir
+). En la acción 1. el usuario podrá cambiar su contraseña efectivamente y con la acción 2, salir de esa
+sección y regresar al inicio del sistema en donde se preguntan por las credenciales.*/
+
+//k-v (key: username, value: password)
+let authData = new Map();
+const maxLoginFailedAttempts = 3;
+
+let userData = {
+
+        user_1 : {
+            id: 1,
+            name: 'scorpion',
+		    password: '987654',
+		    failedLoginCounter: 0,
+		    isLocked: false
+        },
+        
+        user_2 : {
+            id : 2,
+            name: 'subZero',
+		    password: '987654',
+		    failedLoginCounter: 0,
+		    isLocked: false 
+        }
+    };    
+
+authData.set('scorpion',userData.user_1);
+authData.set('subZero',userData.user_2);
+	
+function isValidUserGetData (name)
+{
+    return authData.get(name) || null;
+}
+
+function authenticateUser(username, password)
+{
+    let api_return = 
+    {
+        status : false,
+        result : null,
+		user : null
+    };
+
+	let api_content ;
+
+    const invalid_values = [undefined, null, ''];
+
+    if (invalid_values.includes(username) || invalid_values.includes(password))
+    {
+		api_return.result = 'INVALID_INPUT';
+		return api_return;
+	}
+
+    let user_data = isValidUserGetData(username);
+
+	if (!user_data)
+	{
+		api_return.result = 'USER_NOT_FOUND';	
+		return api_return;
+	}
+
+	if (user_data.isLocked == false)
+	{
+		if (user_data.password === password)
+		{
+			api_return.status = true;
+			api_return.result = 'AUTH_SUCCESS';
+			api_return.user = loggedUser(username);
+
+			user_data.failedLoginCounter = 0;
+
+			
+		}
+		else
+		{
+			api_return.status = false;
+			api_return.result = 'USER_PASSWORD_FAILED';
+
+			user_data.failedLoginCounter++;
+
+				if ( user_data.failedLoginCounter == maxLoginFailedAttempts)
+				{
+					user_data.isLocked = true;
+					api_return.status = false;
+					api_return.result  = 'BLOCKED_USER';
+
+				}
+			}
+	}
+	else
+	{
+		api_return.status = false;
+		api_return.result = 'BLOCKED_USER';
+	}
+		
+		return api_return;
+}
+
+function loggedUser(username)
+{
+	let logged_user = authData.get(username);
+	return logged_user;
+}
+
+function GUI_login()
+{
+	let username = window.prompt("Ingrese su nombre de usuario: ");
+	let password = window.prompt("Ingrese su contraseña: ");
+
+	let api_return = authenticateUser(username,password);
+
+	if (api_return.status)
+	{
+		alert("Usuario autenticado exitosamente");
+	}
+	else if (api_return.status == false)
+	{
+		switch (api_return.result )
+		{
+			case 'BLOCKED_USER':
+				alert('Usuario bloqueado, contacte al administrador');
+				break;
+
+			case 'USER_PASSWORD_FAILED':
+				alert('Usuario y/o contraseña incorrecta');
+				break;
+
+			default: 
+				alert('Error desconocido');
+				break;
+		}
+	}
+
+	return api_return;
+}
+
+
+function passwordMenu(user_name)
+{
+
+	let action = window.prompt("Ingrese una opcion:\n1. Cambiar contraseña\nX. Salir");	
+
+	if (action === 1)
+	{
+		let new_password = window.prompt(`Ingrese la nueva contraseña de: ${user_name}`);
+		
+		if ((new_password != undefined) && (new_password != null) && (new_password != ''))
+		{
+			let user = loggedUser(user_name);
+			user.password = new_password;
+			alert(`Nueva contraseña de ${user.name}: ${new_password}`);
+		}
+	}
+	else if ( action == 'x' || action == 'X')
+	{
+		return alert('Saliendo . . .');
+	}
+	else
+	{
+		alert('Opcion invalida, intente de nuevo');
+		return passwordMenu(user_name);
+	}
+
+}
+
+
+function main()
+{
+	let attempts = 0;
+	let api_return = GUI_login();
+
+	while (api_return.result == 'USER_PASSWORD_FAILED' && attempts < maxLoginFailedAttempts)
+	{
+		api_return = GUI_login();
+
+		if (api_return.result == 'USER_PASSWORD_FAILED' )
+		{
+			attempts++;
+		}
+	}
+
+	if (!api_return.status){return;}
+	let user = api_return.user.name;
+
+	//main menu?
+	while(true){
+		let option = window.prompt('Main menu:\n 1. Changue Password \n X. Salir');
+		
+		if (option.toLowerCase() === 'x')
+		{ 
+			alert('Saliendo. . . '); 
+			break;
+		}
+		switch (option) {
+			case 1:
+				passwordMenu(user);
+				break;
+
+			default:
+				break;
+		}
+	}	
+}
+
+window.onload = main;
+</script>
+
+</html>

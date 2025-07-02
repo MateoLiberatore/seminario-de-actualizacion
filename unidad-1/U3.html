@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8" />
+<title>Unidad 1</title>
+</head>
+
+<body>
+
+</body>
+
+<script type="text/javascript">
+	
+/*Modifique el sistema del punto 2, de modo tal que la contraseña satisfaga los requisitos de seguridad
+descritos a continuación: Entre 8 y 16 caracteres alfanuméricos, al menos una mayúscula y al menos 2
+símbolos especiales.*/
+
+//k-v (key: username, value: password)
+let authData = new Map();
+const maxLoginFailedAttempts = 3;
+
+let userData = {
+
+        user_1 : {
+            id: 1,
+            name: 'scorpion',
+		    password: '987654',
+		    failedLoginCounter: 0,
+		    isLocked: false
+        },
+        
+        user_2 : {
+            id : 2,
+            name: 'subZero',
+		    password: '987654',
+		    failedLoginCounter: 0,
+		    isLocked: false 
+        }
+    };    
+
+authData.set('scorpion',userData.user_1);
+authData.set('subZero',userData.user_2);
+	
+function isValidUserGetData (name)
+{
+    return authData.get(name) || null;
+}
+
+function authenticateUser(username, password)
+{
+    let api_return = 
+    {
+        status : false,
+        result : null,
+		user : null
+    };
+
+    const invalid_values = [undefined, null, ''];
+
+    if (invalid_values.includes(username) || invalid_values.includes(password))
+    {
+		api_return.result = 'INVALID_INPUT';
+		return api_return;
+	}
+
+    let user_data = isValidUserGetData(username);
+
+	if (!user_data)
+	{
+		api_return.result = 'USER_NOT_FOUND';	
+		return api_return;
+	}
+
+	if (user_data.isLocked == false)
+	{
+		if (user_data.password === password)
+		{
+			api_return.status = true;
+			api_return.result = 'AUTH_SUCCESS';
+			api_return.user = loggedUser(username);
+
+			user_data.failedLoginCounter = 0;
+
+			
+		}
+		else
+		{
+			api_return.status = false;
+			api_return.result = 'USER_PASSWORD_FAILED';
+
+			user_data.failedLoginCounter++;
+
+				if ( user_data.failedLoginCounter == maxLoginFailedAttempts)
+				{
+					user_data.isLocked = true;
+					api_return.status = false;
+					api_return.result  = 'BLOCKED_USER';
+
+				}
+			}
+	}
+	else
+	{
+		api_return.status = false;
+		api_return.result = 'BLOCKED_USER';
+	}
+		
+		return api_return;
+}
+
+function loggedUser(username)
+{
+	let logged_user = authData.get(username);
+	return logged_user;
+}
+
+function GUI_login()
+{
+	let username = window.prompt("Ingrese su nombre de usuario: ");
+	let password = window.prompt("Ingrese su contraseña: ");
+
+	let api_return = authenticateUser(username,password);
+
+	if (api_return.status)
+	{
+		alert("Usuario autenticado exitosamente");
+	}
+	else if (api_return.status == false)
+	{
+		switch (api_return.result )
+		{
+			case 'BLOCKED_USER':
+				alert('Usuario bloqueado, contacte al administrador');
+				break;
+
+			case 'USER_PASSWORD_FAILED':
+				alert('Usuario y/o contraseña incorrecta');
+				break;
+
+			default: 
+				alert('Error desconocido');
+				break;
+		}
+	}
+
+	return api_return;
+}
+
+
+function passwordMenu(user_name) {
+	while (true) {
+		let action = window.prompt("Ingrese una opción:\n1. Cambiar contraseña\nX. Volver al menú principal");
+
+		if (action === null || action.toLowerCase() === 'x') {
+			alert("Volviendo al menú principal...");
+			return;
+		}
+
+		if (action === "1") {
+			let valid_password = false;
+
+			while (!valid_password) {
+				let new_password = window.prompt(`Ingrese la nueva contraseña de: ${user_name}`);
+				
+				if (new_password === null) {
+					alert("Cambio de contraseña cancelado.");
+					break;
+				}
+
+				valid_password = passHealth(new_password);
+
+				if (valid_password) {
+					let user = loggedUser(user_name);
+					user.password = new_password;
+					alert(`Nueva contraseña de ${user.name}: ${new_password}`);
+				}
+			}
+			return; // vuelve al menú principal después de cambiar o cancelar
+		} else {
+			alert("Opción inválida, intente de nuevo.");
+		}
+	}
+}
+
+
+function passHealth(password) {
+
+    const pass_requirements = {
+        uppercase_minimum: 1,
+        character_min: 8,
+        character_max: 16,
+        special_needed: 2,
+        any_number : 1
+    };
+
+    if (!password) return false;
+
+    let uppercase_check = password.match(/[A-Z]/g);
+    let uppercase_amount = uppercase_check ? uppercase_check.length : 0;
+
+    let password_length = password.length;
+
+    let special_check = password.match(/[^a-zA-Z0-9]/g);
+    let special_amount = special_check ? special_check.length : 0;
+
+    let number_check = password.match(/\d/);
+    let number_amount = number_check ? number_check.length : 0;
+
+    if (
+        uppercase_amount >= pass_requirements.uppercase_minimum &&
+        password_length >= pass_requirements.character_min &&
+        password_length <= pass_requirements.character_max &&
+        special_amount >= pass_requirements.special_needed && 
+        number_amount >= pass_requirements.any_number
+    ) 
+    {
+        return true;
+    } 
+    else 
+    {
+        alert(` La contraseña debe cumplir con:
+                - Ser alfanumérica
+                - Al menos ${pass_requirements.uppercase_minimum} letra mayúscula
+                - Entre ${pass_requirements.character_min} y ${pass_requirements.character_max} caracteres
+                - Al menos ${pass_requirements.special_needed} caracteres especiales`);
+        return false;
+    }
+}
+
+
+function main()
+{
+	let attempts = 0;
+	let api_return = GUI_login();
+
+	while (api_return.result == 'USER_PASSWORD_FAILED' && attempts < maxLoginFailedAttempts)
+	{
+		api_return = GUI_login();
+
+		if (api_return.result == 'USER_PASSWORD_FAILED' )
+		{
+			attempts++;
+		}
+	}
+
+	if (!api_return.status){return;}
+	let user = api_return.user.name;
+
+	//main menu?
+	while(true){
+		let option = window.prompt('Main menu:\n 1. Changue Password \n X. Salir');
+		
+		if (option.toLowerCase() === 'x')
+		{ 
+			alert('Saliendo. . . '); 
+			break;
+		}
+		switch (option) {
+			case "1":
+				passwordMenu(user);
+				break;
+
+			default:
+                alert('Opcion invalida');
+				break;
+		}
+	}	
+}
+
+window.onload = main;
+</script>
+
+</html>
