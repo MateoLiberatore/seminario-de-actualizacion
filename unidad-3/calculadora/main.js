@@ -4,7 +4,7 @@ class CalculatorComponent extends HTMLElement
     constructor()
     {
         super();                                //contructor superclase
-        this.attachShadow({ mode: 'open' });//adjunta shadow dom
+        this.attachShadow({ mode: 'open' });    //adjunta shadow dom
         this.display = null;                    //pantalla
         // eventos
         this.boundHandleCalculateClick = this.handleCalculateClick.bind(this);
@@ -16,7 +16,7 @@ class CalculatorComponent extends HTMLElement
         var styleLink = document.createElement('link');
 
         styleLink.setAttribute('rel', 'stylesheet');
-        styleLink.setAttribute('href', './calculadora.css');// hoja de estilos
+        styleLink.setAttribute('href', './styles.css');// hoja de estilos
         this.shadowRoot.appendChild(styleLink);
 
         var calculatorContainer = document.createElement('div');
@@ -39,7 +39,7 @@ class CalculatorComponent extends HTMLElement
             [{ value: '0', id: 'azul' }, { value: '.', id: 'azul' }, { value: '=', id: 'amarillo', action: 'calculate' }, { value: '/' , id: 'verde'}]
         ];
 
-        function processButtonConfig(btnConfig) // procesar filas
+        function processButtonConfig(btnConfig, tr) // procesar filas
         {
             var td = document.createElement('td');
             var button = document.createElement('button');
@@ -64,15 +64,12 @@ class CalculatorComponent extends HTMLElement
             tr.appendChild(td);
         }
 
-        function forEachButtonConfigCallback(config) // Callback para rowConfig.forEach
-        {
-            processButtonConfig.call(this, config);
-        }
-
         function processRowConfig(rowConfig)
         {
             var tr = document.createElement('tr');
-            rowConfig.forEach(forEachButtonConfigCallback, this); //Pasa el contexto this para el callback de forEach
+            rowConfig.forEach(function(config) { //Pasa el contexto this para el callback de forEach
+                processButtonConfig.call(this, config, tr);
+            }, this);
             tableElement.appendChild(tr);
         }
 
@@ -82,6 +79,8 @@ class CalculatorComponent extends HTMLElement
         }
 
         buttonsConfig.forEach(forEachRowConfigCallback, this); //Pasa el contexto this para el callback de forEach.
+
+        calculatorContainer.appendChild(tableElement);
 
         var clearButton = document.createElement('button');
 
