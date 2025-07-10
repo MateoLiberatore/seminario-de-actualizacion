@@ -760,13 +760,12 @@ export class ApplicationUI
         let username = this.getPrompt("Ingrese el nombre del usuario que desea editar:");
         if (username === null) return;
 
-        let user = this.model.getLoggedUser(username);
+        let user = this.model.isValidUserGetData(username); // <-- Cambio aquí
         if (!user)
         {
             this.showAlert("Usuario no encontrado.");
             return;
         }
-
         this.showAlert(`Datos actuales del usuario:\nID: ${user.id}\nNombre: ${user.name}\nContraseña: ${user.password}\nIntentos fallidos: ${user.failedLoginCounter}\nBloqueado: ${user.isLocked}\nCategoría: ${user.category}`);
 
         let newUsername = this.getPrompt("Nuevo nombre de usuario:", username); // Capturar nuevo nombre de usuario
@@ -958,7 +957,7 @@ export class ApplicationUI
                     await this.passwordMenu(user.name);
                     break;
                 case "2":
-                    await this.shoppingCart(); // Selling is essentially buying from the stock perspective
+                    await this.shoppingCart();  
                     break;
                 case "x":
                     exitUserMenu = true;
