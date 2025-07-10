@@ -1,299 +1,216 @@
-// applicationModel.js
-
 export class ApplicationModel
 {
-    constructor() 
+    constructor()
     {
         this.maxLoginFailedAttempts = 3;
-        this.productData = 
+        this.productData =
         {
-            1: { id: 1, name: "Lavandina x 1L", price: 875.25, stock: 3000 },
-            4: { id: 4, name: "Detergente x 500mL", price: 1102.45, stock: 2010 },
-            22: { id: 22, name: "Jabón en polvo x 250g", price: 650.22, stock: 407 }
+            1:  { id: 1,  name: "Lavandina x 1L",        price: 875.25,  stock: 3000 },
+            4:  { id: 4,  name: "Detergente x 500mL",    price: 1102.45, stock: 2010 },
+            22: { id: 22, name: "Jabón en polvo x 250g", price: 650.22,  stock: 407 }
         };
         this.authData = new Map();
         this.initUserData();
     }
 
-    initUserData() 
+    initUserData()
     {
-        const userData = 
+        const userData =
         {
             user_1: { id: 1, name: 'scorpion', password: '987654', failedLoginCounter: 0, isLocked: false, category: 'admin' },
             user_2: { id: 2, name: 'subZero', password: '987654', failedLoginCounter: 0, isLocked: false, category: 'seller' },
             user_3: { id: 3, name: 'deadpool', password: '987654', failedLoginCounter: 0, isLocked: false, category: 'worker' },
-            user_4: { id: 4, name: 'carlitos', password: '987654', failedLoginCounter: 0, isLocked: false, category: 'client' }
+            user_4: { id: 4, name: 'liukang', password: '987654', failedLoginCounter: 0, isLocked: false, category: 'client' }
         };
-        this.authData.set('scorpion', userData.user_1);
-        this.authData.set('subZero', userData.user_2);
-        this.authData.set('deadpool', userData.user_3);
-        this.authData.set('carlitos', userData.user_4);
-    }
 
- 
-
-    isValidUserGetData(username) 
-    {
-        return this.authData.get(username) || null;
-    }
-
-    authenticateUser(username, password) 
-    {
-        let api_return = { status: false, result: null, user: null };
-
-        const invalid_values = [undefined, null, ''];
-
-        if (invalid_values.includes(username) || invalid_values.includes(password)) 
+        for (const key in userData)
         {
-            api_return.result = 'INVALID_INPUT';
-            return api_return;
-        }
-
-        let user_data = this.isValidUserGetData(username);
-
-        if (!user_data) 
-        {
-            api_return.result = 'USER_NOT_FOUND';
-            return api_return;
-        }
-
-        if (user_data.isLocked === false) 
-        {
-            if (user_data.password === password) 
+            if (userData.hasOwnProperty(key))
             {
-                api_return.status = true;
-                api_return.result = 'AUTH_SUCCESS';
-                api_return.user = user_data; 
-                user_data.failedLoginCounter = 0;
-            } 
-            else 
-            {
-                api_return.status = false;
-                api_return.result = 'USER_PASSWORD_FAILED';
-                user_data.failedLoginCounter++;
-
-                if (user_data.failedLoginCounter === this.maxLoginFailedAttempts) 
-                {
-                    user_data.isLocked = true;
-                    api_return.result = 'BLOCKED_USER';
-                }
+                this.authData.set(userData[key].name, userData[key]);
             }
-
-        } 
-        else 
-        {
-            api_return.status = false;
-            api_return.result = 'BLOCKED_USER';
         }
-        return api_return;
     }
 
-    getLoggedUser(username)                 //retornar el usuario logueado 
-    {
-        return this.authData.get(username);
-    }
-
-    updateUserPassword(username, newPassword) 
+    authenticateUser(username, password)
     {
         const user = this.authData.get(username);
-        
-        if (user) 
-        {
+
+        if (!user) {
+            return { status: false, result: "USER_NOT_FOUND" };
+        }
+
+        if (user.isLocked) {
+            return { status: false, result: "BLOCKED_USER" };
+        }
+
+        if (user.password !== password) {
+            user.failedLoginCounter++;
+            if (user.failedLoginCounter >= this.maxLoginFailedAttempts) {
+                user.isLocked = true;
+                return { status: false, result: "BLOCKED_USER" };
+            }
+            return { status: false, result: "USER_PASSWORD_FAILED" };
+        }
+
+        user.failedLoginCounter = 0;
+        return { status: true, user: user };
+    }
+
+    getNextUserId() {
+        let maxId = 0;
+        this.authData.forEach(user => {
+            if (user.id > maxId) {
+                maxId = user.id;
+            }
+        });
+        return maxId + 1;
+    }
+
+    checkUsernameExists(username) {
+        return this.authData.has(username);
+    }
+
+    addUser(username, name, password, category) {
+        if (this.authData.has(username)) {
+            return { status: false, message: "USER_ALREADY_EXISTS" };
+        }
+
+        const newUserId = this.getNextUserId();
+        const newUser = {
+            id: newUserId,
+            name: username,
+            full_name: name,
+            password: password,
+            failedLoginCounter: 0,
+            isLocked: false,
+            category: category
+        };
+        this.authData.set(username, newUser);
+        return { status: true, user_data: newUser };
+    }
+
+    updateUserPassword(username, newPassword) {
+        const user = this.authData.get(username);
+        if (user) {
             user.password = newPassword;
             return true;
         }
         return false;
     }
 
-    passHealth(password) 
-    {
-        const pass_requirements = 
-        {
-            uppercase_minimum: 1,
-            character_min: 8,
-            character_max: 16,
-            special_needed: 2,
-            any_number: 1
-        };
-
-        if (!password) return false;
-
-        let uppercase_check = password.match(/[A-Z]/g);
-        let uppercase_amount = uppercase_check ? uppercase_check.length : 0;
-
-        let password_length = password.length;
-
-        let special_check = password.match(/[^a-zA-Z0-9]/g);
-        let special_amount = special_check ? special_check.length : 0;
-
-        let number_check = password.match(/\d/);
-        let number_amount = number_check ? number_check.length : 0;
-
-        return (
-            uppercase_amount >= pass_requirements.uppercase_minimum &&
-            password_length >= pass_requirements.character_min &&
-            password_length <= pass_requirements.character_max &&
-            special_amount >= pass_requirements.special_needed &&
-            number_amount >= pass_requirements.any_number
-        );
+    isValidUserGetData(username) {
+        return this.authData.get(username) || null;
     }
 
-    checkUsernameExists(username) 
-    {
-        return this.authData.has(username);
-    }
-
-    addUser(username, name, password, category) 
-    {
-        let maxId = 0;
-        for (let user of this.authData.values()) 
-        {
-            if (user.id > maxId) 
-            {
-                maxId = user.id;
-            }
-        }
-        let newId = maxId + 1;
-
-        const new_user_data = 
-        {
-            id: newId,
-            name: name,
-            password: password,
-            failedLoginCounter: 0,
-            isLocked: false,
-            category: category
-        };
-
-        this.authData.set(username, new_user_data);
-        return { status: true, user_data: new_user_data, user: username };
-    }
-
-    deleteUser(username) 
-    {
-        if (!this.authData.has(username)) 
-        {
-            return { status: false, message: "USER_NOT_FOUND" };
-        }
-        if (username === "scorpion") 
-        {
-            return { status: false, message: "CANNOT_DELETE_ADMIN" };
-        }
-        this.authData.delete(username);
-        return { status: true, message: "USER_DELETED" };
-    }
-
-    getAllUsers() 
-    {
+    getAllUsers() {
         return Array.from(this.authData.entries());
     }
 
-    editUser(oldUsername, newUsername, newName, newPassword, newCategory, newIsLocked) {
-        let user = this.authData.get(oldUsername);
+    deleteUser(username) {
+        const user = this.authData.get(username);
+        if (!user) {
+            return { status: false, message: "USER_NOT_FOUND" };
+        }
+        if (user.category === 'admin' && user.name === 'scorpion') {
+            return { status: false, message: "CANNOT_DELETE_ADMIN" };
+        }
 
+        if (this.authData.delete(username)) {
+            return { status: true, message: "USER_DELETED" };
+        }
+        return { status: false, message: "UNKNOWN_ERROR" };
+    }
+
+    editUser(oldUsername, newUsername, newName, newPassword, newCategory, newIsLocked) {
+        const user = this.authData.get(oldUsername);
         if (!user) {
             return { status: false, message: "USER_NOT_FOUND" };
         }
 
-        if (!["admin", "seller", "worker", "client"].includes(newCategory)) {
-            return { status: false, message: "INVALID_CATEGORY" };
-        }
-
-        if (newIsLocked !== true && newIsLocked !== false) {
-            return { status: false, message: "INVALID_LOCKED_STATUS" };
-        }
-
-        if (newUsername !== oldUsername && this.authData.has(newUsername)) {
-            return { status: false, message: "USERNAME_ALREADY_EXISTS" };
-        }
-
-        if (newUsername !== oldUsername) {
+        if (oldUsername !== newUsername) {
+            if (this.authData.has(newUsername)) {
+                return { status: false, message: "NEW_USERNAME_ALREADY_EXISTS" };
+            }
             this.authData.delete(oldUsername);
+            user.name = newUsername;
+            this.authData.set(newUsername, user);
         }
 
-        let updatedUser = 
-        {
-            id: user.id,
-            name: newName,
-            password: newPassword,
-            failedLoginCounter: user.failedLoginCounter,
-            isLocked: newIsLocked,
-            category: newCategory
-        };
+        user.full_name = newName;
+        user.password  = newPassword;
+        user.category  = newCategory;
+        user.isLocked  = newIsLocked;
 
-        this.authData.set(newUsername, updatedUser);
-        return { status: true, message: "USER_UPDATED", user: updatedUser };
+        if (!newIsLocked && user.failedLoginCounter > 0) {
+            user.failedLoginCounter = 0;
+        }
+
+        return { status: true, user: user };
     }
 
-    // --- Product Management ---
+    passHealth(password) {
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecialChar = (password.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g) || []).length >= 2;
+        const isAlphaNumeric = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/.test(password);
+        const isLengthValid = password.length >= 8 && password.length <= 16;
 
-    getAllProducts() 
-    {
-        return Object.values(this.productData);
+        return hasUpperCase && hasNumber && hasSpecialChar && isAlphaNumeric && isLengthValid;
     }
 
-    addProduct(name, price, stock) 
-    {
-        let usedIds = Object.keys(this.productData).map(id => parseInt(id)).sort((a, b) => a - b);
-        let nextId = 1;
-
-        for (let id of usedIds) 
-        {
-            if (id === nextId) 
-            {
-                nextId++;
-            } 
-            else if (id > nextId) 
-            {
-                break;
+    getNextProductId() {
+        let maxId = 0;
+        for (const id in this.productData) {
+            if (this.productData.hasOwnProperty(id) && parseInt(id) > maxId) {
+                maxId = parseInt(id);
             }
         }
+        return maxId + 1;
+    }
 
-        let product = 
-        {
-            id: nextId,
+    addProduct(name, price, stock) {
+        const newProductId = this.getNextProductId();
+        const newProduct = {
+            id: newProductId,
             name: name,
             price: price,
             stock: stock
         };
-
-        this.productData[product.id] = product;
-        return { status: true, product: product };
+        this.productData[newProductId] = newProduct;
+        return { status: true, product: newProduct };
     }
 
-    searchProduct(searchName) 
-    {
-        searchName = searchName.toLowerCase();
-        const foundProducts = [];
-        for (let id in this.productData) 
-        {
-            let product = this.productData[id];
-
-            if (product.name.toLowerCase().includes(searchName)) 
-            {
-                foundProducts.push(product);
+    searchProduct(searchTerm) {
+        const found = [];
+        for (const id in this.productData) {
+            if (this.productData.hasOwnProperty(id)) {
+                const product = this.productData[id];
+                if (product.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    found.push(product);
+                }
             }
         }
-        return foundProducts;
+        return found;
     }
 
-    deleteProduct(id) 
-    {
-        if (this.productData.hasOwnProperty(id)) 
-        {
+    deleteProduct(id) {
+        if (this.productData.hasOwnProperty(id)) {
             delete this.productData[id];
             return { status: true, message: "PRODUCT_DELETED" };
         }
         return { status: false, message: "PRODUCT_NOT_FOUND" };
     }
 
-    getProductById(id) 
-    {
+    getProductById(id) {
         return this.productData[id] || null;
     }
 
-    updateProduct(id, newName, newPrice, newStock) 
-    {
+    getAllProducts() {
+        return Object.values(this.productData);
+    }
+
+    updateProduct(id, newName, newPrice, newStock) {
         if (this.productData.hasOwnProperty(id)) {
             let product = this.productData[id];
             product.name = newName;
@@ -304,29 +221,38 @@ export class ApplicationModel
         return { status: false, message: "PRODUCT_NOT_FOUND" };
     }
 
-
-
-    processPurchase(cartItems) 
-    {
+    processPurchase(cartItems) {
         let total = 0;
         let purchaseSummary = [];
 
-        for (let item of cartItems) 
-        {
+        const tempStocks = {};
+        for (const id in this.productData) {
+            if (this.productData.hasOwnProperty(id)) {
+                tempStocks[id] = this.productData[id].stock;
+            }
+        }
+
+        for (let item of cartItems) {
             const productId = item.productId;
             const quantity = item.quantity;
             const product = this.productData[productId];
 
-            if (!product || product.stock < quantity || quantity <= 0) 
-            {
+            if (!product || tempStocks[productId] < quantity || quantity <= 0) {
                 return { status: false, message: "INVALID_ITEM_OR_STOCK" };
             }
 
             let subtotal = product.price * quantity;
-            this.productData[productId].stock -= quantity;
+            tempStocks[productId] -= quantity;
             total += subtotal;
-            purchaseSummary.push({ product: product.name, quantity: quantity, subtotal: subtotal });
+            purchaseSummary.push({ productId: productId, product: product.name, quantity: quantity, subtotal: subtotal });
         }
+
+        for (const id in tempStocks) {
+            if (tempStocks.hasOwnProperty(id)) {
+                this.productData[id].stock = tempStocks[id];
+            }
+        }
+
         return { status: true, total: total, summary: purchaseSummary };
     }
 }

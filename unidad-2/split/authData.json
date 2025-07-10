@@ -1,7 +1,0 @@
-{
-    "users" :
-    [{"id":1, "user_name":"Mateooo","name":"Mateo", "password":"algo.98.",
-        "failedLoginCounter": 0,"isLocked": false, "category" : "admin"}],
-    "products" :
-    [{"id":1,"name":"Lavandina x 1L","price": 875.25,"stock": 3000}]
-}
