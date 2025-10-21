@@ -120,7 +120,7 @@ class LoginComponent extends HTMLElement {
     }
 
     disconnectedCallback() {
-        // en este caso no requerido
+ 
     }
 
     attributeChangedCallback(name, oldValue, newValue) { }
